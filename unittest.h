@@ -9,7 +9,8 @@
  * @license MIT
  *
  * @detail
- * usage:
+ * latest version is found at https://github.com/ocxtal/unittest.h.
+ * see README.md for the details.
  */
 #pragma once	/* instead of include guard */
 
@@ -120,9 +121,9 @@ struct unittest_config_s {
 	char const *depends_on[16];
 
 	/* environment setup and cleanup */
-	void *(*init)(void *context_params);
+	void *(*init)(void *params);
 	void (*clean)(void *context);
-	void *context_params;
+	void *params;
 };
 
 /**
@@ -147,9 +148,9 @@ struct unittest_s {
 	char const *depends_on[16];
 
 	/* environment setup and cleanup */
-	void *(*init)(void *context_params);
+	void *(*init)(void *params);
 	void (*clean)(void *context);
-	void *context_params;
+	void *params;
 };
 
 /**
@@ -1049,12 +1050,12 @@ int unittest_main_impl(int argc, char *argv[])
 
 		void *gctx = NULL;
 		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			gctx = compd_config[i].init(compd_config[i].context_params);
+			gctx = compd_config[i].init(compd_config[i].params);
 		}
 
 		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
 			if(test[j].init != NULL && test[j].clean != NULL) {
-				void *ctx = test[j].init(test[j].context_params);
+				void *ctx = test[j].init(test[j].params);
 				test[j].fn(ctx, gctx, &test[j], &compd_config[i], &r);
 				test[j].clean(ctx);
 			} else {
