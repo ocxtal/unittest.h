@@ -17,8 +17,9 @@
 #define UNITTEST 				0
 #endif
 
-/* disable unittests if UNITTEST == 0 */
-#if UNITTEST != 0
+#ifndef UNITTEST_ALIAS_MAIN
+#define UNITTEST_ALIAS_MAIN		0
+#endif
 
 #define _POSIX_C_SOURCE		2
 
@@ -119,8 +120,9 @@ struct unittest_config_s {
 	char const *depends_on[16];
 
 	/* environment setup and cleanup */
-	void *(*init)(void);
-	void (*clean)(void *);
+	void *(*init)(void *context_params);
+	void (*clean)(void *context);
+	void *context_params;
 };
 
 /**
@@ -145,8 +147,9 @@ struct unittest_s {
 	char const *depends_on[16];
 
 	/* environment setup and cleanup */
-	void *(*init)(void);
-	void (*clean)(void *);
+	void *(*init)(void *context_params);
+	void (*clean)(void *context);
+	void *context_params;
 };
 
 /**
@@ -995,16 +998,16 @@ void unittest_print_results(
 		fail += result[i].fail;
 	}
 
-	fprintf(stderr, "Total: %lld succeeded, %lld failed in total %lld tests.\n",
+	fprintf(stderr, "Summary: %lld succeeded, %lld failed in total %lld tests.\n",
 		succ, fail, succ + fail);
 	return;
 }
 
 /**
- * @fn unittest_main
+ * @fn unittest_main_impl
  */
 static
-int unittest_main(int argc, char *argv[])
+int unittest_main_impl(int argc, char *argv[])
 {
 	/* dump symbol table */
 	struct unittest_nm_result_s *nm = unittest_nm(argv[0]);
@@ -1048,12 +1051,12 @@ int unittest_main(int argc, char *argv[])
 
 		void *gctx = NULL;
 		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			gctx = compd_config[i].init();
+			gctx = compd_config[i].init(compd_config[i].context_params);
 		}
 
 		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
 			if(test[j].init != NULL && test[j].clean != NULL) {
-				void *ctx = test[j].init();
+				void *ctx = test[j].init(test[j].context_params);
 				test[j].fn(ctx, gctx, &test[j], &compd_config[i], &r);
 				test[j].clean(ctx);
 			} else {
@@ -1080,16 +1083,23 @@ int unittest_main(int argc, char *argv[])
 	return(0);
 }
 
-#else /* #if UNITTEST != 0 */
-
 static
 int unittest_main(int argc, char *argv[])
 {
-	/* nothing to do */
-	return(0);
+	/* disable unittests if UNITTEST == 0 */
+	#if UNITTEST != 0
+		return(unittest_main_impl(argc, argv));
+	#else
+		return(0);
+	#endif
 }
 
-#endif /* #if UNITTEST != 0* /
+#if UNITTEST_ALIAS_MAIN != 0
+int main(int argc, char *argv[])
+{
+	return(unittest_main(argc, argv));
+}
+#endif
 
 /**
  * end of unittest.h
