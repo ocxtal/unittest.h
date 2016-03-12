@@ -13,6 +13,13 @@
  */
 #pragma once	/* instead of include guard */
 
+#ifndef UNITTEST
+#define UNITTEST 				0
+#endif
+
+/* disable unittests if UNITTEST == 0 */
+#if UNITTEST != 0
+
 #define _POSIX_C_SOURCE		2
 
 #include <alloca.h>
@@ -1072,6 +1079,17 @@ int unittest_main(int argc, char *argv[])
 	free(nm);
 	return(0);
 }
+
+#else /* #if UNITTEST != 0 */
+
+static
+int unittest_main(int argc, char *argv[])
+{
+	/* nothing to do */
+	return(0);
+}
+
+#endif /* #if UNITTEST != 0* /
 
 /**
  * end of unittest.h
