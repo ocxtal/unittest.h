@@ -240,7 +240,8 @@ void unittest_print_assertion_failed(
 	va_list l;
 	va_start(l, fmt);
 
-	fprintf(stderr, ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:%lld ([%s] %s) `" ut_color(UT_MAGENTA, "%s") "'",
+	fprintf(stderr,
+		ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:" ut_color(UT_BLUE, "%lld") " ([%s] " ut_color(UT_BLUE, "%s") ") `" ut_color(UT_MAGENTA, "%s") "'",
 		unittest_null_replace(config->name, "(no name)"),
 		unittest_null_replace(info->file, "(unknown filename)"),
 		line,
