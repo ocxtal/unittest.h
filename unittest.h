@@ -244,12 +244,12 @@ void ut_print_assertion_failed(
 	va_start(l, fmt);
 
 	fprintf(stderr,
-		ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:" ut_color(UT_BLUE, "%lld") " ([%s] " ut_color(UT_BLUE, "%s") ") `" ut_color(UT_MAGENTA, "%s") "'",
-		ut_null_replace(config->name, "(no name)"),
+		ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:" ut_color(UT_BLUE, "%lld") " (%s) `" ut_color(UT_MAGENTA, "%s") "'",
+		ut_null_replace(config->name, "no name"),
 		ut_null_replace(info->file, "(unknown filename)"),
 		line,
-		ut_null_replace(info->name, "(no name)"),
-		func, expr);
+		ut_null_replace(info->name, "no name"),
+		expr);
 	if(strlen(fmt) != 0) {
 		fprintf(stderr, ", ");
 		vfprintf(stderr, fmt, l);
