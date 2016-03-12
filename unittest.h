@@ -1041,7 +1041,7 @@ int unittest_main(int argc, char *argv[])
 
 		void *gctx = NULL;
 		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			gctx = compd_config[i].init;
+			gctx = compd_config[i].init();
 		}
 
 		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
@@ -1056,7 +1056,7 @@ int unittest_main(int argc, char *argv[])
 		}
 
 		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			gctx = compd_config[i].clean;
+			compd_config[i].clean(gctx);
 		}
 
 		utkv_push(res, r);
