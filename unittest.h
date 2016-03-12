@@ -740,8 +740,6 @@ struct unittest_config_s *unittest_compensate_config(
 	// unittest_dump_config(sorted_config);
 
 	int64_t *file_idx = unittest_build_file_index(sorted_test);
-	int64_t file_cnt = unittest_get_total_file_count(sorted_test);
-
 	utkvec_t(struct unittest_config_s) compd_config;
 	utkv_init(compd_config);
 
