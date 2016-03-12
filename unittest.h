@@ -192,15 +192,16 @@ struct unittest_s {
 		struct unittest_s const *unittest_info, \
 		struct unittest_config_s const *unittest_config, \
 		struct unittest_result_s *unittest_result); \
+	static struct unittest_s const unittest_build_name(unittest_info_, UNITTEST_UNIQUE_ID, __LINE__) = { \
+		.file = __FILE__, \
+		.line = __LINE__, \
+		.unique_id = UNITTEST_UNIQUE_ID, \
+		.fn = unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__), \
+		__VA_ARGS__ \
+	}; \
 	struct unittest_s unittest_build_name(unittest_get_info_, UNITTEST_UNIQUE_ID, __LINE__)(void) \
 	{ \
-		return((struct unittest_s){ \
-			.file = __FILE__, \
-			.line = __LINE__, \
-			.unique_id = UNITTEST_UNIQUE_ID, \
-			.fn = unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__), \
-			__VA_ARGS__ \
-		}); \
+		return(unittest_build_name(unittest_info_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	} \
 	static void unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
 		void *ctx, \
@@ -215,13 +216,14 @@ struct unittest_s {
  * @brief scope configuration
  */
 #define unittest_config(...) \
+	static struct unittest_config_s const unittest_build_name(unittest_config_, UNITTEST_UNIQUE_ID, __LINE__) = { \
+		.file = __FILE__, \
+		.unique_id = UNITTEST_UNIQUE_ID, \
+		__VA_ARGS__ \
+	}; \
 	struct unittest_config_s unittest_build_name(unittest_get_config_, UNITTEST_UNIQUE_ID, 0)(void) \
 	{ \
-		return((struct unittest_config_s){ \
-			.file = __FILE__, \
-			.unique_id = UNITTEST_UNIQUE_ID, \
-			__VA_ARGS__ \
-		}); \
+		return(unittest_build_name(unittest_config_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	}
 
 /**
