@@ -45,6 +45,19 @@
 #define UNITTEST_KV_INIT 			( 64 )
 
 /**
+ * output coloring
+ */
+#define UT_RED				"\x1b[31m"
+#define UT_GREEN			"\x1b[32m"
+#define UT_YELLOW			"\x1b[33m"
+#define UT_BLUE				"\x1b[34m"
+#define UT_MAGENTA			"\x1b[35m"
+#define UT_CYAN				"\x1b[36m"
+#define UT_WHITE			"\x1b[37m"
+#define UT_DEFAULT_COLOR	"\x1b[39m"
+#define ut_color(c, x)		c x UT_DEFAULT_COLOR
+
+/**
  * basic vectors (utkv_*)
  */
 #define utkvec_t(type)    struct { uint64_t n, m; type *a; }
@@ -227,7 +240,7 @@ void unittest_print_assertion_failed(
 	va_list l;
 	va_start(l, fmt);
 
-	fprintf(stderr, "assertion failed: [%s] %s:%lld ([%s] %s) `%s'",
+	fprintf(stderr, ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:%lld ([%s] %s) `" ut_color(UT_MAGENTA, "%s") "'",
 		unittest_null_replace(config->name, "(no name)"),
 		unittest_null_replace(info->file, "(unknown filename)"),
 		line,
@@ -816,7 +829,9 @@ int unittest_toposort_by_tag(
 		}
 
 		if(node_id == -1) {
-			fprintf(stderr, "ERROR: detected circular dependency in the tests in `%s'.\n", sorted_test[0].file);
+			fprintf(stderr,
+				ut_color(UT_RED, "ERROR") ": detected circular dependency in the tests in `" ut_color(UT_MAGENTA, "%s") "'.\n",
+				sorted_test[0].file);
 			return(-1);
 		}
 
@@ -843,7 +858,9 @@ int unittest_toposort_by_tag(
 	}
 
 	if(utkv_size(res) != test_cnt) {
-		fprintf(stderr, "ERROR: detected circular dependency in the tests in `%s'.\n", sorted_test[0].file);
+		fprintf(stderr,
+			ut_color(UT_RED, "ERROR") ": detected circular dependency in the tests in `" ut_color(UT_MAGENTA, "%s") "'.\n",
+			sorted_test[0].file);
 		return(-1);
 	}
 
@@ -921,7 +938,7 @@ int unittest_toposort_by_group(
 		}
 
 		if(file_id == -1) {
-			fprintf(stderr, "ERROR: detected circular dependency between groups.\n");
+			fprintf(stderr, ut_color(UT_RED, "ERROR") ": detected circular dependency between groups.\n");
 			return(-1);
 		}
 
@@ -953,7 +970,7 @@ int unittest_toposort_by_group(
 	}
 
 	if(utkv_size(config_buf) != file_cnt) {
-		fprintf(stderr, "ERROR: detected circular dependency between groups.\n");
+		fprintf(stderr, ut_color(UT_RED, "ERROR") ": detected circular dependency between groups.\n");
 		return(-1);
 	}
 
@@ -987,18 +1004,22 @@ void unittest_print_results(
 	int64_t fail = 0;
 
 	for(int64_t i = 0; i < file_cnt; i++) {
-		fprintf(stderr, "Group %s: %lld succeeded, %lld failed in total %lld tests.\n",
+		fprintf(stderr, "%sGroup %s: %lld succeeded, %lld failed in total %lld tests.%s\n",
+			(result[i].fail == 0) ? UT_GREEN : UT_RED,
 			unittest_null_replace(config[i].name, "(no name)"),
 			result[i].succ,
 			result[i].fail,
-			result[i].succ + result[i].fail);
+			result[i].succ + result[i].fail,
+			UT_DEFAULT_COLOR);
 		
 		succ += result[i].succ;
 		fail += result[i].fail;
 	}
 
-	fprintf(stderr, "Summary: %lld succeeded, %lld failed in total %lld tests.\n",
-		succ, fail, succ + fail);
+	fprintf(stderr, "%sSummary: %lld succeeded, %lld failed in total %lld tests.%s\n",
+		(fail == 0) ? UT_GREEN : UT_RED,
+		succ, fail, succ + fail,
+		UT_DEFAULT_COLOR);
 	return;
 }
 
@@ -1029,7 +1050,7 @@ int unittest_main_impl(int argc, char *argv[])
 	for(int64_t i = 0; i < file_cnt; i++) {
 		// printf("toposort %lld, %lld\n", file_idx[i], file_idx[i + 1]);
 		if(unittest_toposort_by_tag(&test[file_idx[i]], file_idx[i + 1] - file_idx[i]) != 0) {
-			fprintf(stderr, "ERROR: failed to order tests. check if the depends_on options are sane.\n");
+			fprintf(stderr, ut_color(UT_RED, "ERROR") ": failed to order tests. check if the depends_on options are sane.\n");
 			return(1);
 		}
 	}
@@ -1038,7 +1059,7 @@ int unittest_main_impl(int argc, char *argv[])
 
 	/* topological sort by group */
 	if(unittest_toposort_by_group(test, test_cnt, compd_config, file_idx, file_cnt) != 0) {
-		fprintf(stderr, "ERROR: failed to order tests. check if the depends_on options are sane.\n");
+		fprintf(stderr, ut_color(UT_RED, "ERROR") ": failed to order tests. check if the depends_on options are sane.\n");
 		return(1);
 	}
 
