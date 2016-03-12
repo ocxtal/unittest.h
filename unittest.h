@@ -115,6 +115,7 @@ int main(int argc, char *argv[]);
  * @struct unittest_result_s
  */
 struct unittest_result_s {
+	int64_t cnt;
 	int64_t succ;
 	int64_t fail;
 };
@@ -1003,25 +1004,28 @@ void unittest_print_results(
 	struct unittest_result_s const *result,
 	int64_t file_cnt)
 {
+	int64_t cnt = 0;
 	int64_t succ = 0;
 	int64_t fail = 0;
 
 	for(int64_t i = 0; i < file_cnt; i++) {
-		fprintf(stderr, "%sGroup %s: %lld succeeded, %lld failed in total %lld tests.%s\n",
+		fprintf(stderr, "%sGroup %s: %lld succeeded, %lld failed in total %lld assertions in %lld tests.%s\n",
 			(result[i].fail == 0) ? UT_GREEN : UT_RED,
 			unittest_null_replace(config[i].name, "(no name)"),
 			result[i].succ,
 			result[i].fail,
 			result[i].succ + result[i].fail,
+			result[i].cnt,
 			UT_DEFAULT_COLOR);
 		
+		cnt += result[i].cnt;
 		succ += result[i].succ;
 		fail += result[i].fail;
 	}
 
-	fprintf(stderr, "%sSummary: %lld succeeded, %lld failed in total %lld tests.%s\n",
+	fprintf(stderr, "%sSummary: %lld succeeded, %lld failed in total %lld assertions in %lld tests.%s\n",
 		(fail == 0) ? UT_GREEN : UT_RED,
-		succ, fail, succ + fail,
+		succ, fail, succ + fail, cnt,
 		UT_DEFAULT_COLOR);
 	return;
 }
@@ -1078,6 +1082,7 @@ int unittest_main_impl(int argc, char *argv[])
 		}
 
 		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
+			r.cnt++;
 			if(test[j].init != NULL && test[j].clean != NULL) {
 				void *ctx = test[j].init(test[j].params);
 				test[j].fn(ctx, gctx, &test[j], &compd_config[i], &r);
