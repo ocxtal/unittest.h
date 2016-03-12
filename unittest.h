@@ -112,20 +112,20 @@
 int main(int argc, char *argv[]);
 
 /**
- * @struct unittest_result_s
+ * @struct ut_result_s
  */
-struct unittest_result_s {
+struct ut_result_s {
 	int64_t cnt;
 	int64_t succ;
 	int64_t fail;
 };
 
 /**
- * @struct unittest_config_s
+ * @struct ut_config_s
  *
  * @brief unittest scope config
  */
-struct unittest_config_s {
+struct ut_config_s {
 	/* internal use */
 	char const *file;
 	int64_t unique_id;
@@ -141,11 +141,11 @@ struct unittest_config_s {
 };
 
 /**
- * @struct unittest_s
+ * @struct ut_s
  *
  * @brief unittest function config
  */
-struct unittest_s {
+struct ut_s {
 	/* for internal use */
 	char const *file;
 	int64_t unique_id;
@@ -153,9 +153,9 @@ struct unittest_s {
 	void (*fn)(
 		void *ctx,
 		void *gctx,
-		struct unittest_s const *info,
-		struct unittest_config_s const *config,
-		struct unittest_result_s *result);
+		struct ut_s const *info,
+		struct ut_config_s const *config,
+		struct ut_result_s *result);
 
 	/* dependency resolution */
 	char const *name;
@@ -168,18 +168,18 @@ struct unittest_s {
 };
 
 /**
- * @macro unittest_null_replace
+ * @macro ut_null_replace
  * @brief replace pointer with "(null)"
  */
-#define unittest_null_replace(ptr, str)			( (ptr) == NULL ? (str) : (ptr) )
+#define ut_null_replace(ptr, str)			( (ptr) == NULL ? (str) : (ptr) )
 
 /**
- * @macro unittest_build_name
+ * @macro ut_build_name
  *
  * @brief an utility macro to make unique name
  */
-#define unittest_join_name(a, b, c)				a##b##_##c
-#define unittest_build_name(prefix, num, id)	unittest_join_name(prefix, num, id)
+#define ut_join_name(a, b, c)				a##b##_##c
+#define ut_build_name(prefix, num, id)	ut_join_name(prefix, num, id)
 
 /**
  * @macro unittest
@@ -187,29 +187,29 @@ struct unittest_s {
  * @brief instanciate a unittest object
  */
 #define unittest(...) \
-	static void unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
+	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
 		void *ctx, \
 		void *gctx, \
-		struct unittest_s const *unittest_info, \
-		struct unittest_config_s const *unittest_config, \
-		struct unittest_result_s *unittest_result); \
-	static struct unittest_s const unittest_build_name(unittest_info_, UNITTEST_UNIQUE_ID, __LINE__) = { \
+		struct ut_s const *ut_info, \
+		struct ut_config_s const *ut_config, \
+		struct ut_result_s *ut_result); \
+	static struct ut_s const ut_build_name(ut_info_, UNITTEST_UNIQUE_ID, __LINE__) = { \
 		.file = __FILE__, \
 		.line = __LINE__, \
 		.unique_id = UNITTEST_UNIQUE_ID, \
-		.fn = unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__), \
+		.fn = ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__), \
 		__VA_ARGS__ \
 	}; \
-	struct unittest_s unittest_build_name(unittest_get_info_, UNITTEST_UNIQUE_ID, __LINE__)(void) \
+	struct ut_s ut_build_name(ut_get_info_, UNITTEST_UNIQUE_ID, __LINE__)(void) \
 	{ \
-		return(unittest_build_name(unittest_info_, UNITTEST_UNIQUE_ID, __LINE__)); \
+		return(ut_build_name(ut_info_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	} \
-	static void unittest_build_name(unittest_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
+	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
 		void *ctx, \
 		void *gctx, \
-		struct unittest_s const *unittest_info, \
-		struct unittest_config_s const *unittest_config, \
-		struct unittest_result_s *unittest_result)
+		struct ut_s const *ut_info, \
+		struct ut_config_s const *ut_config, \
+		struct ut_result_s *ut_result)
 
 /**
  * @macro unittest_config
@@ -217,23 +217,23 @@ struct unittest_s {
  * @brief scope configuration
  */
 #define unittest_config(...) \
-	static struct unittest_config_s const unittest_build_name(unittest_config_, UNITTEST_UNIQUE_ID, __LINE__) = { \
+	static struct ut_config_s const ut_build_name(ut_config_, UNITTEST_UNIQUE_ID, __LINE__) = { \
 		.file = __FILE__, \
 		.unique_id = UNITTEST_UNIQUE_ID, \
 		__VA_ARGS__ \
 	}; \
-	struct unittest_config_s unittest_build_name(unittest_get_config_, UNITTEST_UNIQUE_ID, 0)(void) \
+	struct ut_config_s ut_build_name(ut_get_config_, UNITTEST_UNIQUE_ID, 0)(void) \
 	{ \
-		return(unittest_build_name(unittest_config_, UNITTEST_UNIQUE_ID, __LINE__)); \
+		return(ut_build_name(ut_config_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	}
 
 /**
  * assertion failed message printer
  */
 static inline
-void unittest_print_assertion_failed(
-	struct unittest_s const *info,
-	struct unittest_config_s const *config,
+void ut_print_assertion_failed(
+	struct ut_s const *info,
+	struct ut_config_s const *config,
 	int64_t line,
 	char const *func,
 	char const *expr,
@@ -245,10 +245,10 @@ void unittest_print_assertion_failed(
 
 	fprintf(stderr,
 		ut_color(UT_YELLOW, "assertion failed") ": [%s] %s:" ut_color(UT_BLUE, "%lld") " ([%s] " ut_color(UT_BLUE, "%s") ") `" ut_color(UT_MAGENTA, "%s") "'",
-		unittest_null_replace(config->name, "(no name)"),
-		unittest_null_replace(info->file, "(unknown filename)"),
+		ut_null_replace(config->name, "(no name)"),
+		ut_null_replace(info->file, "(unknown filename)"),
 		line,
-		unittest_null_replace(info->name, "(no name)"),
+		ut_null_replace(info->name, "(no name)"),
 		func, expr);
 	if(strlen(fmt) != 0) {
 		fprintf(stderr, ", ");
@@ -262,7 +262,7 @@ void unittest_print_assertion_failed(
 /**
  * memory dump macro
  */
-#define unittest_dump(ptr, len) ({ \
+#define ut_dump(ptr, len) ({ \
 	uint64_t size = (((len) + 15) / 16 + 1) * \
 		(strlen("0x0123456789abcdef:") + 16 * strlen(" 00a") + strlen("  \n+ margin")) \
 		+ strlen(#ptr) + strlen("\n`' len: 100000000"); \
@@ -291,37 +291,37 @@ void unittest_print_assertion_failed(
 	(char const *)_str; \
 })
 #ifndef dump
-#define dump 			unittest_dump
+#define dump 			ut_dump
 #endif
 
 /**
  * assertion macro
  */
-#define unittest_assert(expr, ...) { \
+#define ut_assert(expr, ...) { \
 	if(expr) { \
-		unittest_result->succ++; \
+		ut_result->succ++; \
 	} else { \
-		unittest_result->fail++; \
+		ut_result->fail++; \
 		/* dump debug information */ \
-		unittest_print_assertion_failed(unittest_info, unittest_config, __LINE__, __func__, #expr, "" __VA_ARGS__); \
+		ut_print_assertion_failed(ut_info, ut_config, __LINE__, __func__, #expr, "" __VA_ARGS__); \
 	} \
 }
 #ifndef assert
-#define assert			unittest_assert
+#define assert			ut_assert
 #endif
 
 /**
- * @struct unittest_nm_result_s
+ * @struct ut_nm_result_s
  * @brief parsed result container
  */
-struct unittest_nm_result_s {
+struct ut_nm_result_s {
 	void *ptr;
 	char type;
 	char name[255];
 };
 
 static inline
-int unittest_strcmp(
+int ut_strcmp(
 	char const *a,
 	char const *b)
 {
@@ -340,7 +340,7 @@ int unittest_strcmp(
 }
 
 static inline
-char *unittest_build_nm_cmd(
+char *ut_build_nm_cmd(
 	char const *filename)
 {
 	int64_t const filename_len_limit = 1024;
@@ -360,7 +360,7 @@ char *unittest_build_nm_cmd(
 }
 
 static inline
-char *unittest_dump_file(
+char *ut_dump_file(
 	FILE *fp)
 {
 	int c;
@@ -377,7 +377,7 @@ char *unittest_dump_file(
 }
 
 static inline
-char *unittest_dump_nm_output(
+char *ut_dump_nm_output(
 	char const *filename)
 {
 	char *cmd = NULL;
@@ -385,27 +385,27 @@ char *unittest_dump_nm_output(
 	char *res = NULL;
 
 	/* build command */
-	if((cmd = unittest_build_nm_cmd(filename)) == NULL) {
-		goto _unittest_nm_error_handler;
+	if((cmd = ut_build_nm_cmd(filename)) == NULL) {
+		goto _ut_nm_error_handler;
 	}
 
 	/* open */
 	if((fp = popen(cmd, "r")) == NULL) {
-		goto _unittest_nm_error_handler;
+		goto _ut_nm_error_handler;
 	}
 
 	/* dump */
-	if((res = unittest_dump_file(fp)) == NULL) {
-		goto _unittest_nm_error_handler;
+	if((res = ut_dump_file(fp)) == NULL) {
+		goto _ut_nm_error_handler;
 	}
 
 	/* close file */
 	if(pclose(fp) != 0) {
-		goto _unittest_nm_error_handler;
+		goto _ut_nm_error_handler;
 	}
 	return(res);
 
-_unittest_nm_error_handler:
+_ut_nm_error_handler:
 	if(cmd != NULL) { free(cmd); }
 	if(fp != NULL) { pclose(fp); }
 	if(res != NULL) { free(res); }
@@ -413,15 +413,15 @@ _unittest_nm_error_handler:
 }
 
 static inline
-struct unittest_nm_result_s *unittest_parse_nm_output(
+struct ut_nm_result_s *ut_parse_nm_output(
 	char const *str)
 {
 	char const *p = str;
-	utkvec_t(struct unittest_nm_result_s) buf;
+	utkvec_t(struct ut_nm_result_s) buf;
 
 	utkv_init(buf);
 	while(p != '\0') {
-		struct unittest_nm_result_s r;
+		struct ut_nm_result_s r;
 
 		/* check the sanity of the line */
 		char const *sp = p;
@@ -469,28 +469,28 @@ struct unittest_nm_result_s *unittest_parse_nm_output(
 	}
 
 	/* push terminator */
-	utkv_push(buf, (struct unittest_nm_result_s){ 0 });
+	utkv_push(buf, (struct ut_nm_result_s){ 0 });
 	return(utkv_ptr(buf));
 }
 
 static inline
-struct unittest_nm_result_s *unittest_nm(
+struct ut_nm_result_s *ut_nm(
 	char const *filename)
 {
 	char const *str = NULL;
-	struct unittest_nm_result_s *res = NULL;
+	struct ut_nm_result_s *res = NULL;
 
-	if((str = unittest_dump_nm_output(filename)) == NULL) {
+	if((str = ut_dump_nm_output(filename)) == NULL) {
 		return(NULL);
 	}
-	res = unittest_parse_nm_output(str);
+	res = ut_parse_nm_output(str);
 	
 	free((void *)str);
 	return(res);
 }
 
 static inline
-int unittest_startswith(char const *str, char const *prefix)
+int ut_startswith(char const *str, char const *prefix)
 {
 	while(*str != '\0' && *prefix != '\0') {
 		if(*str++ != *prefix++) { return(1); }
@@ -499,14 +499,14 @@ int unittest_startswith(char const *str, char const *prefix)
 }
 
 static inline
-struct unittest_s *unittest_get_unittest(
-	struct unittest_nm_result_s const *res)
+struct ut_s *ut_get_unittest(
+	struct ut_nm_result_s const *res)
 {
 	/* extract offset */
 	uint64_t offset = -1;
-	struct unittest_nm_result_s const *r = res;
+	struct ut_nm_result_s const *r = res;
 	while(r->type != (char)0) {
-		if(unittest_strcmp("main", r->name) == 0) {
+		if(ut_strcmp("main", r->name) == 0) {
 			offset = (void *)main - r->ptr;
 		}
 		r++;
@@ -516,37 +516,37 @@ struct unittest_s *unittest_get_unittest(
 		return(NULL);
 	}
 
-	#define unittest_get_info_call_func(_ptr, _offset) ( \
-		(struct unittest_s (*)(void))((uint64_t)(_ptr) + (uint64_t)(_offset)) \
+	#define ut_get_info_call_func(_ptr, _offset) ( \
+		(struct ut_s (*)(void))((uint64_t)(_ptr) + (uint64_t)(_offset)) \
 	)
 
 	/* get info */
-	utkvec_t(struct unittest_s) buf;
+	utkvec_t(struct ut_s) buf;
 	
 	r = res;
 	utkv_init(buf);
 	while(r->type != (char)0) {
-		if(unittest_startswith(r->name, "unittest_get_info_") == 0) {
-			struct unittest_s i = unittest_get_info_call_func(r->ptr, offset)();
+		if(ut_startswith(r->name, "ut_get_info_") == 0) {
+			struct ut_s i = ut_get_info_call_func(r->ptr, offset)();
 			utkv_push(buf, i);
 		}
 		r++;
 	}
 
 	/* push terminator */
-	utkv_push(buf, (struct unittest_s){ 0 });
+	utkv_push(buf, (struct ut_s){ 0 });
 	return(utkv_ptr(buf));
 }
 
 static inline
-struct unittest_config_s *unittest_get_unittest_config(
-	struct unittest_nm_result_s const *res)
+struct ut_config_s *ut_get_ut_config(
+	struct ut_nm_result_s const *res)
 {
 	/* extract offset */
 	uint64_t offset = -1;
-	struct unittest_nm_result_s const *r = res;
+	struct ut_nm_result_s const *r = res;
 	while(r->type != (char)0) {
-		if(unittest_strcmp("main", r->name) == 0) {
+		if(ut_strcmp("main", r->name) == 0) {
 			offset = (void *)main - r->ptr;
 		}
 		r++;
@@ -556,33 +556,33 @@ struct unittest_config_s *unittest_get_unittest_config(
 		return(NULL);
 	}
 
-	#define unittest_get_config_call_func(_ptr, _offset) ( \
-		(struct unittest_config_s (*)(void))((uint64_t)(_ptr) + (uint64_t)(_offset)) \
+	#define ut_get_config_call_func(_ptr, _offset) ( \
+		(struct ut_config_s (*)(void))((uint64_t)(_ptr) + (uint64_t)(_offset)) \
 	)
 
 	/* get info */
-	utkvec_t(struct unittest_config_s) buf;
+	utkvec_t(struct ut_config_s) buf;
 	
 	r = res;
 	utkv_init(buf);
 	while(r->type != (char)0) {
-		if(unittest_startswith(r->name, "unittest_get_config_") == 0) {
-			struct unittest_config_s i = unittest_get_config_call_func(r->ptr, offset)();
+		if(ut_startswith(r->name, "ut_get_config_") == 0) {
+			struct ut_config_s i = ut_get_config_call_func(r->ptr, offset)();
 			utkv_push(buf, i);
 		}
 		r++;
 	}
 
 	/* push terminator */
-	utkv_push(buf, (struct unittest_config_s){ 0 });
+	utkv_push(buf, (struct ut_config_s){ 0 });
 	return(utkv_ptr(buf));
 }
 
 static inline
-void unittest_dump_test(
-	struct unittest_s const *test)
+void ut_dump_test(
+	struct ut_s const *test)
 {
-	struct unittest_s const *t = test;
+	struct ut_s const *t = test;
 	while(t->file != NULL) {
 		printf("%s, %llu, %lld, %s, %s, %p, %p\n",
 			t->file,
@@ -598,10 +598,10 @@ void unittest_dump_test(
 }
 
 static inline
-void unittest_dump_config(
-	struct unittest_config_s const *config)
+void ut_dump_config(
+	struct ut_config_s const *config)
 {
-	struct unittest_config_s const *c = config;
+	struct ut_config_s const *c = config;
 	while(c->file != NULL) {
 		printf("%s, %lld, %s, %s, %p, %p\n",
 			c->file,
@@ -616,21 +616,21 @@ void unittest_dump_config(
 }
 
 static
-int unittest_compare(
+int ut_compare(
 	void const *_a,
 	void const *_b)
 {
-	struct unittest_s const *a = (struct unittest_s const *)_a;
-	struct unittest_s const *b = (struct unittest_s const *)_b;
+	struct ut_s const *a = (struct ut_s const *)_a;
+	struct ut_s const *b = (struct ut_s const *)_b;
 
 	int comp_res = 0;
 	/* first sort by file name */
-	if((comp_res = unittest_strcmp(a->file, b->file)) != 0) {
+	if((comp_res = ut_strcmp(a->file, b->file)) != 0) {
 		return(comp_res);
 	}
 
 	/* second sort by name */
-	if((comp_res = unittest_strcmp(a->name, b->name)) != 0) {
+	if((comp_res = ut_strcmp(a->name, b->name)) != 0) {
 		return(comp_res);
 	}
 
@@ -639,51 +639,51 @@ int unittest_compare(
 }
 
 static
-int unittest_config_compare(
+int ut_config_compare(
 	void const *_a,
 	void const *_b)
 {
-	struct unittest_config_s const *a = (struct unittest_config_s const *)_a;
-	struct unittest_config_s const *b = (struct unittest_config_s const *)_b;
-	return(unittest_strcmp(a->file, b->file));
+	struct ut_config_s const *a = (struct ut_config_s const *)_a;
+	struct ut_config_s const *b = (struct ut_config_s const *)_b;
+	return(ut_strcmp(a->file, b->file));
 }
 
 static inline
-int unittest_match(
+int ut_match(
 	void const *_a,
 	void const *_b)
 {
-	struct unittest_s const *a = (struct unittest_s *)_a;
-	struct unittest_s const *b = (struct unittest_s *)_b;
-	return((unittest_strcmp(a->file, b->file) == 0 && a->unique_id == b->unique_id) ? 0 : 1);
+	struct ut_s const *a = (struct ut_s *)_a;
+	struct ut_s const *b = (struct ut_s *)_b;
+	return((ut_strcmp(a->file, b->file) == 0 && a->unique_id == b->unique_id) ? 0 : 1);
 }
 
 static inline
-int64_t unittest_get_total_test_count(
-	struct unittest_s const *test)
+int64_t ut_get_total_test_count(
+	struct ut_s const *test)
 {
 	int64_t cnt = 0;
-	struct unittest_s const *t = test;
+	struct ut_s const *t = test;
 	while(t->file != NULL) { t++; cnt++; }
 	return(cnt);
 }
 
 static inline
-int64_t unittest_get_total_config_count(
-	struct unittest_config_s const *config)
+int64_t ut_get_total_config_count(
+	struct ut_config_s const *config)
 {
 	int64_t cnt = 0;
-	struct unittest_config_s const *c = config;
+	struct ut_config_s const *c = config;
 	while(c->file != NULL) { c++; cnt++; }
 	return(cnt);
 }
 
 static inline
-int64_t unittest_get_total_file_count(
-	struct unittest_s const *sorted_test)
+int64_t ut_get_total_file_count(
+	struct ut_s const *sorted_test)
 {
 	int64_t cnt = 1;
-	struct unittest_s const *t = sorted_test;
+	struct ut_s const *t = sorted_test;
 
 	if(t++->file == NULL) {
 		return(0);
@@ -691,7 +691,7 @@ int64_t unittest_get_total_file_count(
 
 	while(t->file != NULL) {
 		// printf("comp %s and %s\n", (t - 1)->file, t->file);
-		if(unittest_match((void *)(t - 1), (void *)t) != 0) {
+		if(ut_match((void *)(t - 1), (void *)t) != 0) {
 			cnt++;
 		}
 		t++;
@@ -700,31 +700,31 @@ int64_t unittest_get_total_file_count(
 }
 
 static inline
-void unittest_sort(
-	struct unittest_s *test,
-	struct unittest_config_s *config)
+void ut_sort(
+	struct ut_s *test,
+	struct ut_config_s *config)
 {
-	// unittest_dump_test(test);
+	// ut_dump_test(test);
 	qsort(test,
-		unittest_get_total_test_count(test),
-		sizeof(struct unittest_s),
-		unittest_compare);
+		ut_get_total_test_count(test),
+		sizeof(struct ut_s),
+		ut_compare);
 	qsort(config,
-		unittest_get_total_config_count(config),
-		sizeof(struct unittest_config_s),
-		unittest_config_compare);
-	// unittest_dump_test(test);
-	// printf("%lld\n", unittest_get_total_file_count(test));
+		ut_get_total_config_count(config),
+		sizeof(struct ut_config_s),
+		ut_config_compare);
+	// ut_dump_test(test);
+	// printf("%lld\n", ut_get_total_file_count(test));
 	return;
 }
 
 static inline
-int64_t *unittest_build_file_index(
-	struct unittest_s const *sorted_test)
+int64_t *ut_build_file_index(
+	struct ut_s const *sorted_test)
 {
 	int64_t cnt = 1;
 	utkvec_t(int64_t) idx;
-	struct unittest_s const *t = sorted_test;
+	struct ut_s const *t = sorted_test;
 
 	utkv_init(idx);
 	if(t++->file == NULL) {
@@ -736,7 +736,7 @@ int64_t *unittest_build_file_index(
 	utkv_push(idx, 0);
 	while(t->file != NULL) {
 		// printf("comp %s and %s\n", (t - 1)->group, t->group);
-		if(unittest_match((void *)(t - 1), (void *)t) != 0) {
+		if(ut_match((void *)(t - 1), (void *)t) != 0) {
 			utkv_push(idx, cnt);
 		}
 		cnt++;
@@ -749,27 +749,27 @@ int64_t *unittest_build_file_index(
 }
 
 static inline
-struct unittest_config_s *unittest_compensate_config(
-	struct unittest_s *sorted_test,
-	struct unittest_config_s *sorted_config)
+struct ut_config_s *ut_compensate_config(
+	struct ut_s *sorted_test,
+	struct ut_config_s *sorted_config)
 {
 	// printf("compensate config\n");
-	// unittest_dump_test(sorted_test);
-	// unittest_dump_config(sorted_config);
+	// ut_dump_test(sorted_test);
+	// ut_dump_config(sorted_config);
 
-	int64_t *file_idx = unittest_build_file_index(sorted_test);
-	utkvec_t(struct unittest_config_s) compd_config;
+	int64_t *file_idx = ut_build_file_index(sorted_test);
+	utkvec_t(struct ut_config_s) compd_config;
 	utkv_init(compd_config);
 
 	int64_t i = 0;
 	// printf("%lld\n", file_idx[i]);
-	struct unittest_s const *t = &sorted_test[file_idx[i]];
-	struct unittest_config_s const *c = sorted_config;
+	struct ut_s const *t = &sorted_test[file_idx[i]];
+	struct ut_config_s const *c = sorted_config;
 
 	while(c->file != NULL && t->file != NULL) {
-		while(unittest_match((void *)t, (void *)c) != 0) {
+		while(ut_match((void *)t, (void *)c) != 0) {
 			// printf("filename does not match %s, %s\n", c->file, t->file);
-			utkv_push(compd_config, (struct unittest_config_s){ .file = t->file });
+			utkv_push(compd_config, (struct ut_config_s){ .file = t->file });
 			t = &sorted_test[file_idx[++i]];
 		}
 		// printf("matched %s, %s\n", c->file, t->file);
@@ -783,8 +783,8 @@ struct unittest_config_s *unittest_compensate_config(
 }
 
 static inline
-int unittest_toposort_by_tag(
-	struct unittest_s *sorted_test,
+int ut_toposort_by_tag(
+	struct ut_s *sorted_test,
 	int64_t test_cnt)
 {
 	/* init dag */
@@ -803,7 +803,7 @@ int unittest_toposort_by_tag(
 			/* enumerate tests */
 			for(int64_t j = 0; j < test_cnt; j++) {
 				if(i == j) { continue; }
-				if(unittest_strcmp(sorted_test[j].name, *d) == 0) {
+				if(ut_strcmp(sorted_test[j].name, *d) == 0) {
 					// printf("edge found from node %lld to node %lld\n", j, i);
 					utkv_push(utkv_at(dag, i), j);
 				}
@@ -821,7 +821,7 @@ int unittest_toposort_by_tag(
 	}
 
 	/* sort */
-	utkvec_t(struct unittest_s) res;
+	utkvec_t(struct ut_s) res;
 	utkv_init(res);
 	for(int64_t i = 0; i < test_cnt; i++) {
 		int64_t node_id = -1;
@@ -885,10 +885,10 @@ int unittest_toposort_by_tag(
 }
 
 static inline
-int unittest_toposort_by_group(
-	struct unittest_s *sorted_test,
+int ut_toposort_by_group(
+	struct ut_s *sorted_test,
 	int64_t test_cnt,
-	struct unittest_config_s *sorted_config,
+	struct ut_config_s *sorted_config,
 	int64_t *file_idx,
 	int64_t file_cnt)
 {
@@ -908,7 +908,7 @@ int unittest_toposort_by_group(
 			/* enumerate tests */
 			for(int64_t j = 0; j < file_cnt; j++) {
 				if(i == j) { continue; }
-				if(unittest_strcmp(sorted_config[j].name, *d) == 0) {
+				if(ut_strcmp(sorted_config[j].name, *d) == 0) {
 					// printf("edge found from group %lld to group %lld\n", j, i);
 					utkv_push(utkv_at(dag, i), j);
 				}
@@ -926,8 +926,8 @@ int unittest_toposort_by_group(
 	}
 
 	/* sort */
-	utkvec_t(struct unittest_s) test_buf;
-	utkvec_t(struct unittest_config_s) config_buf;
+	utkvec_t(struct ut_s) test_buf;
+	utkvec_t(struct ut_config_s) config_buf;
 	utkv_init(test_buf);
 	utkv_init(config_buf);
 	// utkvec_t(uint64_t) res;
@@ -999,9 +999,9 @@ int unittest_toposort_by_group(
 }
 
 static inline
-void unittest_print_results(
-	struct unittest_config_s const *config,
-	struct unittest_result_s const *result,
+void ut_print_results(
+	struct ut_config_s const *config,
+	struct ut_result_s const *result,
 	int64_t file_cnt)
 {
 	int64_t cnt = 0;
@@ -1011,7 +1011,7 @@ void unittest_print_results(
 	for(int64_t i = 0; i < file_cnt; i++) {
 		fprintf(stderr, "%sGroup %s: %lld succeeded, %lld failed in total %lld assertions in %lld tests.%s\n",
 			(result[i].fail == 0) ? UT_GREEN : UT_RED,
-			unittest_null_replace(config[i].name, "(no name)"),
+			ut_null_replace(config[i].name, "(no name)"),
 			result[i].succ,
 			result[i].fail,
 			result[i].succ + result[i].fail,
@@ -1031,50 +1031,50 @@ void unittest_print_results(
 }
 
 /**
- * @fn unittest_main_impl
+ * @fn ut_main_impl
  */
 static
-int unittest_main_impl(int argc, char *argv[])
+int ut_main_impl(int argc, char *argv[])
 {
 	/* dump symbol table */
-	struct unittest_nm_result_s *nm = unittest_nm(argv[0]);
+	struct ut_nm_result_s *nm = ut_nm(argv[0]);
 
 	/* dump tests and configs */
-	struct unittest_s *test = unittest_get_unittest(nm);
-	struct unittest_config_s *config = unittest_get_unittest_config(nm);
+	struct ut_s *test = ut_get_unittest(nm);
+	struct ut_config_s *config = ut_get_ut_config(nm);
 
 	/* sort by group, tag, line */
-	unittest_sort(test, config);
-	struct unittest_config_s *compd_config = unittest_compensate_config(test, config);
+	ut_sort(test, config);
+	struct ut_config_s *compd_config = ut_compensate_config(test, config);
 
-	int64_t test_cnt = unittest_get_total_test_count(test);
-	int64_t *file_idx = unittest_build_file_index(test);
-	int64_t file_cnt = unittest_get_total_file_count(test);
+	int64_t test_cnt = ut_get_total_test_count(test);
+	int64_t *file_idx = ut_build_file_index(test);
+	int64_t file_cnt = ut_get_total_file_count(test);
 
 	// printf("%lld\n", file_cnt);
 
 	/* topological sort by tag */
 	for(int64_t i = 0; i < file_cnt; i++) {
 		// printf("toposort %lld, %lld\n", file_idx[i], file_idx[i + 1]);
-		if(unittest_toposort_by_tag(&test[file_idx[i]], file_idx[i + 1] - file_idx[i]) != 0) {
+		if(ut_toposort_by_tag(&test[file_idx[i]], file_idx[i + 1] - file_idx[i]) != 0) {
 			fprintf(stderr, ut_color(UT_RED, "ERROR") ": failed to order tests. check if the depends_on options are sane.\n");
 			return(1);
 		}
 	}
 
-	// unittest_dump_test(test);
+	// ut_dump_test(test);
 
 	/* topological sort by group */
-	if(unittest_toposort_by_group(test, test_cnt, compd_config, file_idx, file_cnt) != 0) {
+	if(ut_toposort_by_group(test, test_cnt, compd_config, file_idx, file_cnt) != 0) {
 		fprintf(stderr, ut_color(UT_RED, "ERROR") ": failed to order tests. check if the depends_on options are sane.\n");
 		return(1);
 	}
 
 	/* run tests */
-	utkvec_t(struct unittest_result_s) res;
+	utkvec_t(struct ut_result_s) res;
 	utkv_init(res);
 	for(int64_t i = 0; i < file_cnt; i++) {
-		struct unittest_result_s r = { 0 };
+		struct ut_result_s r = { 0 };
 
 		void *gctx = NULL;
 		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
@@ -1101,7 +1101,7 @@ int unittest_main_impl(int argc, char *argv[])
 	}
 
 	/* print results */
-	unittest_print_results(compd_config, utkv_ptr(res), file_cnt);
+	ut_print_results(compd_config, utkv_ptr(res), file_cnt);
 
 	utkv_destroy(res);
 	free(compd_config);
@@ -1116,7 +1116,7 @@ int unittest_main(int argc, char *argv[])
 {
 	/* disable unittests if UNITTEST == 0 */
 	#if UNITTEST != 0
-		return(unittest_main_impl(argc, argv));
+		return(ut_main_impl(argc, argv));
 	#else
 		return(0);
 	#endif
