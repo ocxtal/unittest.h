@@ -1076,27 +1076,32 @@ int ut_main_impl(int argc, char *argv[])
 	for(int64_t i = 0; i < file_cnt; i++) {
 		struct ut_result_s r = { 0 };
 
-		void *gctx = NULL;
-		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			gctx = compd_config[i].init(compd_config[i].params);
-		}
-
 		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
 			r.cnt++;
-			if(test[j].init != NULL && test[j].clean != NULL) {
-				void *ctx = test[j].init(test[j].params);
-				test[j].fn(ctx, gctx, &test[j], &compd_config[i], &r);
-				test[j].clean(ctx);
-			} else {
-				test[j].fn(NULL, gctx, &test[j], &compd_config[i], &r);
+
+			/* initialize group context */
+			void *gctx = NULL;
+			if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
+				gctx = compd_config[i].init(compd_config[i].params);
 			}
-			// printf("run test %s, %lld, %lld\n", test[j].name, r.succ, r.fail);
-		}
 
-		if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
-			compd_config[i].clean(gctx);
-		}
+			/* initialize local context */
+			void *ctx = NULL;
+			if(test[j].init != NULL && test[j].clean != NULL) {
+				ctx = test[j].init(test[j].params);
+			}
 
+			/* run a test */
+			test[j].fn(ctx, gctx, &test[j], &compd_config[i], &r);
+
+			/* cleanup contexts */
+			if(test[j].init != NULL && test[j].clean != NULL) {
+				test[j].clean(ctx);
+			}
+			if(compd_config[i].init != NULL && compd_config[i].clean != NULL) {
+				compd_config[i].clean(gctx);
+			}
+		}
 		utkv_push(res, r);
 	}
 
