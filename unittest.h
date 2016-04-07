@@ -645,16 +645,6 @@ int ut_compare(
 	return((int)(a->line - b->line));
 }
 
-static
-int ut_config_compare(
-	void const *_a,
-	void const *_b)
-{
-	struct ut_config_s const *a = (struct ut_config_s const *)_a;
-	struct ut_config_s const *b = (struct ut_config_s const *)_b;
-	return(ut_strcmp(a->file, b->file));
-}
-
 static inline
 int ut_match(
 	void const *_a,
@@ -719,7 +709,7 @@ void ut_sort(
 	qsort(config,
 		ut_get_total_config_count(config),
 		sizeof(struct ut_config_s),
-		ut_config_compare);
+		ut_compare);
 	// ut_dump_test(test);
 	// printf("%" PRId64 "\n", ut_get_total_file_count(test));
 	return;
