@@ -1067,13 +1067,16 @@ int ut_main_impl(int argc, char *argv[])
 		return(1);
 	}
 
+	/* rebuild file idx */
+	int64_t *sorted_file_idx = ut_build_file_index(test);
+
 	/* run tests */
 	utkvec_t(struct ut_result_s) res;
 	utkv_init(res);
 	for(int64_t i = 0; i < file_cnt; i++) {
 		struct ut_result_s r = { 0 };
 
-		for(int64_t j = file_idx[i]; j < file_idx[i + 1]; j++) {
+		for(int64_t j = sorted_file_idx[i]; j < sorted_file_idx[i + 1]; j++) {
 			r.cnt++;
 
 			/* initialize group context */
@@ -1106,6 +1109,8 @@ int ut_main_impl(int argc, char *argv[])
 	ut_print_results(compd_config, utkv_ptr(res), file_cnt);
 
 	utkv_destroy(res);
+	free(sorted_file_idx);
+	free(file_idx);
 	free(compd_config);
 	free(test);
 	free(config);
