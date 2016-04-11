@@ -636,6 +636,8 @@ int ut_compare(
 		return(sat(comp_res));
 	}
 
+	#undef sat
+
 	/* third sort by name */
 	if((comp_res = ut_strcmp(a->name, b->name)) != 0) {
 		return(comp_res);
