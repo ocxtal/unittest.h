@@ -335,7 +335,6 @@ void ut_print_header_json(
 	struct ut_global_config_s const *gconf,
 	struct ut_group_config_s const *config)
 {
-	fprintf(gconf->fp, "\t{\n");
 	if(config->name != NULL) {
 		fprintf(gconf->fp, "\t\"group\": \"%s\",\n", config->name);
 	}
