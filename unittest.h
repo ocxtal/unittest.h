@@ -1497,9 +1497,9 @@ int ut_main_impl(int argc, char *argv[])
 	/* run tests */
 	#ifdef _OPENMP
 	omp_set_num_threads(gconf.threads);
-	#pragma omp parallel for shared(gconf, compd_config)
+	#pragma omp parallel for
 	#endif
-	for(uint64_t i = 0; i < sorted_file_idx[file_cnt]; i++) {
+	for(uint64_t i = 0; i < test_cnt; i++) {
 		ut_run_test(&test[i], &gconf, compd_config);
 	}
 
