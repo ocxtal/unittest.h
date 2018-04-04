@@ -8,4 +8,4 @@ example example2:
 	$(CC) $(CFLAGS) -o $@ $@.c
 
 clean:
-	rm example example2
+	rm -f example example2
