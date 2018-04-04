@@ -1261,6 +1261,8 @@ int ut_modify_test_config_mark(
 		for(int64_t i = 0; i < cnt; i++) {
 			if(ut_strcmp(test[i].name, buf) == 0) {
 				test[i].exec = 2; marked = 1;
+			} else {
+				test[i].exec = 0;
 			}
 		}
 		if(marked == 0) {
@@ -1383,14 +1385,6 @@ void ut_propagate_config(
 	uint64_t *sorted_file_idx,
 	int64_t file_cnt)
 {
-	/* overwrite exec flags */
-	for(uint64_t i = 0; i < file_cnt; i++) {
-		if(compd_config[i].exec != 1) { continue; }
-		for(uint64_t j = sorted_file_idx[i]; j < sorted_file_idx[i + 1]; j++) {
-			test[j].exec = 1;
-		}
-	}
-
 	/* set index */
 	for(uint64_t i = 0; i < file_cnt; i++) {
 		for(uint64_t j = sorted_file_idx[i]; j < sorted_file_idx[i + 1]; j++) {
@@ -1503,7 +1497,7 @@ int ut_main_impl(int argc, char *argv[])
 	/* run tests */
 	#ifdef _OPENMP
 	omp_set_num_threads(gconf.threads);
-	#pragma omp parallel for
+	#pragma omp parallel for shared(gconf, compd_config)
 	#endif
 	for(uint64_t i = 0; i < sorted_file_idx[file_cnt]; i++) {
 		ut_run_test(&test[i], &gconf, compd_config);
