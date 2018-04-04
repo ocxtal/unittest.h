@@ -257,7 +257,7 @@ struct ut_s {
 	struct ut_s *ut_info, \
 	struct ut_global_config_s const *ut_gconf, \
 	struct ut_group_config_s const *ut_config
-#define UNITTEST_ARG_LIST 	ctx, gctx, ut_gconf, ut_info, ut_config
+#define UNITTEST_ARG_LIST 	ctx, gctx, ut_info, ut_gconf, ut_config
 #if UNITTEST != 0
 #define unittest(...) \
 	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)(UNITTEST_ARG_DECL); \
