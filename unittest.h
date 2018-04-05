@@ -38,6 +38,7 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stddef.h>				/* offsetof */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,6 +72,11 @@
 #define UT_WHITE			"\x1b[37m"
 #define UT_DEFAULT_COLOR	"\x1b[39m"
 #define ut_color(c, x)		c x UT_DEFAULT_COLOR
+
+/* static assertion macros */
+#define ut_sa_cat_intl(x, y)	x##y
+#define ut_sa_cat(x, y)			ut_sa_cat_intl(x, y)
+#define ut_static_assert(expr)	typedef char ut_sa_cat(_st, __LINE__)[(expr) ? 1 : -1]
 
 /**
  * basic vectors (utkv_*)
@@ -179,12 +185,11 @@ struct ut_group_config_s {
 	uint64_t line;
 	int64_t exec;
 
+	uint64_t _pad[4];
+
 	/* dependency resolution */
 	char const *name;
 	char const *depends_on[16];
-
-	/* unused */
-	void *unused;
 
 	/* environment setup and cleanup */
 	void *(*init)(void *params);
@@ -225,6 +230,18 @@ struct ut_s {
 	void (*clean)(void *context);
 	void *params;
 };
+
+/* the two structs must be castable */
+ut_static_assert(offsetof(struct ut_group_config_s, file) == offsetof(struct ut_s, file));
+ut_static_assert(offsetof(struct ut_group_config_s, unique_id) == offsetof(struct ut_s, unique_id));
+ut_static_assert(offsetof(struct ut_group_config_s, line) == offsetof(struct ut_s, line));
+ut_static_assert(offsetof(struct ut_group_config_s, exec) == offsetof(struct ut_s, exec));
+ut_static_assert(offsetof(struct ut_group_config_s, name) == offsetof(struct ut_s, name));
+ut_static_assert(offsetof(struct ut_group_config_s, depends_on) == offsetof(struct ut_s, depends_on));
+ut_static_assert(offsetof(struct ut_group_config_s, init) == offsetof(struct ut_s, init));
+ut_static_assert(offsetof(struct ut_group_config_s, clean) == offsetof(struct ut_s, clean));
+ut_static_assert(offsetof(struct ut_group_config_s, params) == offsetof(struct ut_s, params));
+
 
 /**
  * @macro ut_unused
@@ -428,7 +445,6 @@ void ut_print_results_json(
 	fprintf(gconf->fp, "{ \"tag\": \"results\", [ ");
 
 	for(int64_t i = 0, j = 0; i < file_cnt; i++) {
-
 		if(config[i].exec == 0) { continue; }
 		if(config->name != NULL) {
 			fprintf(gconf->fp, "{ \"group\": \"%s\", ", config->name);
@@ -1505,7 +1521,7 @@ int ut_main_impl(int argc, char *argv[])
 
 	/* collect results */
 	struct ut_result_s *res = calloc(sizeof(struct ut_result_s), file_cnt);
-	for(uint64_t i = 0; i < sorted_file_idx[file_cnt]; i++) {
+	for(uint64_t i = 0; i < test_cnt; i++) {
 		uint64_t index = test[i].index;
 		res[index].cnt++;
 		res[index].succ += test[i].succ;
