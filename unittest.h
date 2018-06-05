@@ -72,7 +72,7 @@
  * basic vectors (utkv_*)
  */
 #define utkvec_t(type)    struct { uint64_t n, m; type *a; }
-#define utkv_init(v)      ( (v).n = 0, (v).m = UNITTEST_KV_INIT, (v).a = calloc((v).m, sizeof(*(v).a)) )
+#define utkv_init(v)      ( (v).n = 0, (v).m = UNITTEST_KV_INIT, (v).a = (__typeof__((v).a))calloc((v).m, sizeof(*(v).a)) )
 #define utkv_destroy(v)   { free((v).a); (v).a = NULL; }
 // #define utkv_A(v, i)      ( (v).a[(i)] )
 #define utkv_pop(v)       ( (v).a[--(v).n] )
@@ -81,10 +81,10 @@
 
 #define utkv_clear(v)		( (v).n = 0 )
 #define utkv_resize(v, s) ( \
-	(v).m = (s), (v).a = realloc((v).a, sizeof(*(v).a) * (v).m) )
+	(v).m = (s), (v).a = (__typeof__((v).a))realloc((v).a, sizeof(*(v).a) * (v).m) )
 
 #define utkv_reserve(v, s) ( \
-	(v).m > (s) ? 0 : ((v).m = (s), (v).a = realloc((v).a, sizeof(*(v).a) * (v).m), 0) )
+	(v).m > (s) ? 0 : ((v).m = (s), (v).a = (__typeof__((v).a))realloc((v).a, sizeof(*(v).a) * (v).m), 0) )
 
 #define utkv_copy(v1, v0) do {								\
 		if ((v1).m < (v0).n) utkv_resize(v1, (v0).n);			\
@@ -95,7 +95,7 @@
 #define utkv_push(v, x) do {									\
 		if ((v).n == (v).m) {								\
 			(v).m = (v).m * 2;								\
-			(v).a = realloc((v).a, sizeof(*(v).a) * (v).m);	\
+			(v).a = (__typeof__((v).a))realloc((v).a, sizeof(*(v).a) * (v).m);	\
 		}													\
 		(v).a[(v).n++] = (x);								\
 	} while (0)
@@ -210,10 +210,6 @@ struct ut_s {
 	uint64_t line;
 	int64_t exec;
 
-	/* dependency resolution */
-	char const *name;
-	char const *depends_on[16];
-
 	/* per-function config */
 	void (*fn)(
 		void *ctx,
@@ -222,6 +218,10 @@ struct ut_s {
 		struct ut_s const *info,
 		struct ut_group_config_s const *config,
 		struct ut_result_s *result);
+
+	/* dependency resolution */
+	char const *name;
+	char const *depends_on[16];
 
 	/* environment setup and cleanup */
 	void *(*init)(void *params);
@@ -254,49 +254,58 @@ struct ut_s {
  *
  * @brief instanciate a unittest object
  */
+#define UNITTEST_ARG_DECL \
+	void *ctx, \
+	void *gctx, \
+	struct ut_global_config_s const *ut_gconf, \
+	struct ut_s const *ut_info, \
+	struct ut_group_config_s const *ut_config, \
+	struct ut_result_s *ut_result
+#define UNITTEST_ARG_LIST 	ctx, gctx, ut_gconf, ut_info, ut_config, ut_result
+#if UNITTEST != 0
 #define unittest(...) \
-	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
-		void *ctx, \
-		void *gctx, \
-		struct ut_global_config_s const *ut_gconf, \
-		struct ut_s const *ut_info, \
-		struct ut_group_config_s const *ut_config, \
-		struct ut_result_s *ut_result); \
+	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)(UNITTEST_ARG_DECL); \
 	static struct ut_s const ut_build_name(ut_info_, UNITTEST_UNIQUE_ID, __LINE__) = { \
-		.file = __FILE__, \
-		.line = __LINE__, \
-		.unique_id = UNITTEST_UNIQUE_ID, \
-		.fn = ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__), \
+		/* file, unique_id, line, exec, fn, name, depends_on */ \
+		__FILE__, UNITTEST_UNIQUE_ID, __LINE__, 0, ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__), \
 		__VA_ARGS__ \
 	}; \
 	struct ut_s ut_build_name(ut_get_info_, UNITTEST_UNIQUE_ID, __LINE__)(void) \
 	{ \
 		return(ut_build_name(ut_info_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	} \
-	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)( \
-		void *ctx, \
-		void *gctx, \
-		struct ut_global_config_s const *ut_gconf, \
-		struct ut_s const *ut_info, \
-		struct ut_group_config_s const *ut_config, \
-		struct ut_result_s *ut_result)
+	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)(UNITTEST_ARG_DECL)
+
+#else	/* UNITTEST != 0 */
+
+#define unittest(...) \
+	static void ut_build_name(ut_body_, UNITTEST_UNIQUE_ID, __LINE__)(UNITTEST_ARG_DECL)
+
+
+#endif	/* UNITTEST != 0 */
 
 /**
  * @macro unittest_config
  *
  * @brief scope configuration
  */
+#if UNITTEST != 0
 #define unittest_config(...) \
 	static struct ut_group_config_s const ut_build_name(ut_config_, UNITTEST_UNIQUE_ID, __LINE__) = { \
-		.file = __FILE__, \
-		.line = __LINE__, \
-		.unique_id = UNITTEST_UNIQUE_ID, \
+		/* file, unique_id, line, exec, name, depends_on */ \
+		__FILE__, UNITTEST_UNIQUE_ID, __LINE__, 0, \
 		__VA_ARGS__ \
 	}; \
 	struct ut_group_config_s ut_build_name(ut_get_config_, UNITTEST_UNIQUE_ID, 0)(void) \
 	{ \
 		return(ut_build_name(ut_config_, UNITTEST_UNIQUE_ID, __LINE__)); \
 	}
+
+#else	/* UNITTEST != 0 */
+
+#define unittest_config(...)
+
+#endif	/* UNITTEST != 0 */
 
 /* assertion failed message printers */
 static
@@ -547,7 +556,7 @@ struct ut_printer_s ut_json_printer = {
 	(char const *)_str; \
 })
 #ifndef dump
-#define dump 			ut_dump
+// #define dump 			ut_dump
 #endif
 
 /**
@@ -1264,7 +1273,7 @@ static inline
 char *ut_build_short_option_string(struct option const *opts)
 {
 	char *str = NULL, *ps;
-	int len = 0;
+	uint64_t len = 0;
 	struct option const *po = NULL;
 
 	for(po = opts; po->name != NULL; po++) { len++; }
@@ -1344,6 +1353,7 @@ void ut_print_help(void)
 		"  Options:\n"
 		"    -g, --group [STR,...]    specify group names\n"
 		"    -t, --test  [STR,...]    specify test names\n"
+		"    -s, --seed  [INT]        invoke libc::srand with the seed\n"
 		"    -o, --stdout             redirect to stdout\n"
 		"    -j, --json               print result in json\n"
 		"    -h, --help               show this message\n"
@@ -1373,6 +1383,7 @@ int ut_modify_test_config(
 	static struct option const opts_long[] = {
 		{ "group", required_argument, NULL, 'g' },
 		{ "test", required_argument, NULL, 't' },
+		{ "seed", required_argument, NULL, 's' },
 		{ "stdout", no_argument, NULL, 'o' },
 		{ "json", no_argument, NULL, 'j' },
 		{ "help", no_argument, NULL, 'h' },
@@ -1386,6 +1397,7 @@ int ut_modify_test_config(
 		switch(c) {
 			case 'g': group_arg = optarg; break;
 			case 't': test_arg = optarg; break;
+			case 's': srand((unsigned int)atol(optarg)); break;
 			case 'j': params->printer = ut_json_printer; break;
 			case 'o': params->fp = stdout; break;
 			case 'h': ut_print_help(); return(1);
