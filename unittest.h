@@ -506,7 +506,7 @@ struct ut_printer_s ut_json_printer = {
 	} \
 	_s += sprintf(_s, "\n"); \
 	for(size_t i = 0; i < ((len) + 15) / 16; i++) { \
-		_s += sprintf(_s, "0x%016" PRIx64 ":", (size_t)_ptr); \
+		_s += sprintf(_s, "0x%016zu:", (size_t)_ptr); \
 		for(size_t j = 0; j < 16; j++) { \
 			_s += sprintf(_s, " %02x", (uint8_t)_ptr[j]); \
 		} \
