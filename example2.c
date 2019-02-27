@@ -16,7 +16,7 @@ unittest(
 	.name = "first test",			/* name of the test */
 	.depends_on = {}				/* depends on nothing */
 ) {
-	assert(0 == 0);
+	ut_assert(0 == 0);
 }
 
 /*
@@ -27,8 +27,8 @@ unittest(
 	.depends_on = {"first test"}	/* depends on the first test */
 ) {
 	int i = 0;
-	assert(i == 0);
-	assert(i == 1, "%d", i);		/* prints the content of `i` */
+	ut_assert(i == 0);
+	ut_assert(i == 1, "%d", i);		/* prints the content of `i` */
 }
 
 /*
@@ -39,7 +39,7 @@ unittest(
 	.depends_on = {"second test"}
 ) {
 	char const *hello = "hello world";
-	assert(hello == NULL, "%s, %s", hello, dump(hello, 16));
+	ut_assert(hello == NULL, "%s, %s", hello, ut_dump(hello, 16));
 }
 
 /*
